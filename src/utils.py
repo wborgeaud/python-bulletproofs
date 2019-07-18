@@ -35,6 +35,9 @@ class ModP:
     
     def __pow__(self, n):
         return ModP(pow(self.x, n, self.p), self.p)
+
+    def __mod__(self, other):
+        return self.x % other
     
     def __neg__(self):
         return ModP(self.p - self.x, self.p)

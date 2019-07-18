@@ -2,6 +2,7 @@ from utils import mod_hash, point_to_bytes, inner_product, ModP
 from commitments import vector_commitment
 from elliptic_curve_hash import elliptic_hash
 from ecdsa import SECP256k1
+from pippenger import Pippenger, EC
 
 class Verifier:
 
@@ -71,7 +72,6 @@ class NIProver2:
         R = vector_commitment(self.g[:np],self.h[np:],self.a[np:],self.b[:np]) + cr*self.u
         self.transcript += (point_to_bytes(L) + point_to_bytes(R))
         x = mod_hash(self.transcript, self.group.order)
-        # x = ModP(len(self.a)+1, self.group.order)
         self.transcript += str(x).encode()
         gp = [x.inv()*gi_fh + x*gi_sh for gi_fh,gi_sh in zip(self.g[:np],self.g[np:])]
         hp = [x*hi_fh + x.inv()*hi_sh for hi_fh,hi_sh in zip(self.h[:np],self.h[np:])]
@@ -101,10 +101,6 @@ class FastNIProver2:
         ss = []
         for i in range(1, self.n+1):
             tmp = ModP(1, self.group.order)
-            # for j in range(1, self.log_n+1):
-            #     b = 1 if bin(i-1)[2:].zfill(self.log_n+1)[-j]=='1' else -1 
-            #     print(i,j,b)
-            #     tmp *= xs[j-1] if b==1 else xs[j-1].inv()
             for j in range(0, self.log_n):
                 b = 1 if bin(i-1)[2:].zfill(self.log_n)[j]=='1' else -1 
                 tmp *= xs[j] if b==1 else xs[j].inv()
@@ -135,7 +131,6 @@ class FastNIProver2:
             Rs.append(R)
             self.transcript += (point_to_bytes(L) + point_to_bytes(R))
             x = mod_hash(self.transcript, self.group.order)
-            # x = ModP(len(ap)+1, self.group.order)
             xs.append(x)
             self.transcript += str(x).encode()
             gp = [x.inv()*gi_fh + x*gi_sh for gi_fh,gi_sh in zip(gp[:np],gp[np:])]
@@ -152,16 +147,20 @@ def verify(g,h,u,P,a,b):
     return P, a*g + b*h + c*u
 
 def fast_verify(g, h, u, P, a, b, xs, ss, Ls, Rs, transcript):
-    LHS = (a*b) * u
-    for i,gi in enumerate(g):
-        LHS += (a*ss[i]) * gi
-    for i,hi in enumerate(h):
-        LHS += (b*ss[i].inv()) * hi
+    G = EC(SUPERCURVE)
+    Pip = Pippenger(G)
+    LHS = Pip.multiexp(g+h+[u],[a*ssi for ssi in ss]+[b*ssi.inv() for ssi in ss]+[a*b])
+    RHS = P + Pip.multiexp(Ls+Rs, [xi**2 for xi in xs]+[xi.inv()**2 for xi in xs])
+    # LHS = (a*b) * u
+    # for i,gi in enumerate(g):
+    #     LHS += (a*ss[i]) * gi
+    # for i,hi in enumerate(h):
+    #     LHS += (b*ss[i].inv()) * hi
 
-    RHS = P
-    for xi, Li, Ri in zip(xs, Ls, Rs):
-        RHS += (xi**2) * Li
-        RHS += (xi.inv()**2) * Ri
+    # RHS = P
+    # for xi, Li, Ri in zip(xs, Ls, Rs):
+    #     RHS += (xi**2) * Li
+    #     RHS += (xi.inv()**2) * Ri
     
     if LHS == RHS:
         print('OK')
@@ -169,10 +168,11 @@ def fast_verify(g, h, u, P, a, b, xs, ss, Ls, Rs, transcript):
         print('Not OK')
 
 
-CURVE = SECP256k1.curve
-p = SECP256k1.order
+SUPERCURVE = SECP256k1
+CURVE = SUPERCURVE.curve
+p = SUPERCURVE.order
 
-N = 128
+N = 64
 
 g = [elliptic_hash(str(i).encode() + b'This', CURVE) for i in range(N)]
 h = [elliptic_hash(str(i).encode() + b'is', CURVE) for i in range(N)]
