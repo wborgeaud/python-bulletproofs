@@ -13,17 +13,17 @@ p = SUPERCURVE.order
 
 N = 16
 
-g = [elliptic_hash(str(i).encode() + b'This', CURVE) for i in range(N)]
-h = [elliptic_hash(str(i).encode() + b'is', CURVE) for i in range(N)]
-u = elliptic_hash(b'a test', CURVE)
+g = [elliptic_hash(str(i).encode() + b"This", CURVE) for i in range(N)]
+h = [elliptic_hash(str(i).encode() + b"is", CURVE) for i in range(N)]
+u = elliptic_hash(b"a test", CURVE)
 
-a = [mod_hash(str(i).encode() + b'testing', p) for i in range(N)]
-b = [mod_hash(str(i).encode() + b'still testing', p) for i in range(N)]
+a = [mod_hash(str(i).encode() + b"testing", p) for i in range(N)]
+b = [mod_hash(str(i).encode() + b"still testing", p) for i in range(N)]
 
 P = vector_commitment(g, h, a, b)
 c = inner_product(a, b)
 
-Prov = NIProver(g, h, u, P, c, a, b, SECP256k1, True, b'test')
+Prov = NIProver(g, h, u, P, c, a, b, SECP256k1, True, b"test")
 proof = Prov.prove()
 Verif = Verifier1(g, h, u, P, c, proof)
 
@@ -31,4 +31,5 @@ print(Verif.verify())
 
 print(len(proof.transcript))
 print(len(proof.proof2.transcript))
+print(proof.transcript)
 print(proof.proof2.transcript)
