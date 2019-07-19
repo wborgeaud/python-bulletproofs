@@ -1,4 +1,7 @@
+"""Contains various utilities"""
+
 from hashlib import sha256
+from typing import List
 from ecdsa.ellipticcurve import Point
 from ecdsa import SECP256k1
 from ecdsa.numbertheory import square_root_mod_prime
@@ -9,6 +12,7 @@ BYTE_LENGTH = SUPERCURVE.order.bit_length() // 8
 
 
 def egcd(a, b):
+    """Extended euclid algorithm"""
     if a == 0:
         return (b, 0, 1)
     else:
@@ -17,6 +21,8 @@ def egcd(a, b):
 
 
 class ModP:
+    """Class representing an integer mod p"""
+
     def __init__(self, x, p):
         self.x = x
         self.p = p
@@ -56,9 +62,9 @@ class ModP:
             raise Exception("modular inverse does not exist")
         else:
             return ModP(a % self.p, self.p)
-    
+
     def __eq__(self, y):
-        return (self.p == y.p) and (self.x%self.p == y.x%self.p)
+        return (self.p == y.p) and (self.x % self.p == y.x % self.p)
 
     def __str__(self):
         return str(self.x)
@@ -67,13 +73,14 @@ class ModP:
         return str(self.x)
 
 
-def mod_hash(msg, p, non_zero=True):
+def mod_hash(msg: bytes, p: int, non_zero: bool = True) -> ModP:
+    """Takes a message and a prime and returns a hash in ModP"""
     i = 0
     while True:
         i += 1
         prefixed_msg = str(i).encode() + msg
         h = sha256(prefixed_msg).hexdigest()
-        x = int(h, 16) % 2**p.bit_length()
+        x = int(h, 16) % 2 ** p.bit_length()
         if x >= p:
             continue
         elif non_zero and x == 0:
@@ -82,38 +89,44 @@ def mod_hash(msg, p, non_zero=True):
             return ModP(x, p)
 
 
-def point_to_bytes(g):
+def point_to_bytes(g: Point) -> bytes:
+    """Takes an EC point and returns the compressed bytes representation"""
     if g == Point(None, None, None):
         return b"\x00"
     x_enc = g.x().to_bytes(BYTE_LENGTH, "big")
     prefix = b"\x03" if g.y() % 2 else b"\x02"
     return prefix + x_enc
-    # return (str(g.x()) + str(g.y())).encode()
 
 
-def point_to_b64(g):
+def point_to_b64(g: Point) -> bytes:
+    """Takes an EC point and returns the base64 compressed bytes representation"""
     return base64.b64encode(point_to_bytes(g))
 
 
-def b64_to_point(s):
+def b64_to_point(s: bytes) -> Point:
+    """Takes a base64 compressed bytes representation and returns the corresponding point"""
     return bytes_to_point(base64.b64decode(s))
 
 
-def bytes_to_point(b):
+def bytes_to_point(b: bytes) -> Point:
+    """Takes a compressed bytes representation and returns the corresponding point"""
+    if b == 0:
+        return Point(None, None, None)
     p = SUPERCURVE.curve.p()
     yp, x_enc = b[0], b[1:]
-    yp = 0 if yp==2 else 1
+    yp = 0 if yp == 2 else 1
     x = int.from_bytes(x_enc, "big")
     y = square_root_mod_prime(
-        (x ** 3 + SUPERCURVE.curve.a() * x + SUPERCURVE.curve.b())%p, p
+        (x ** 3 + SUPERCURVE.curve.a() * x + SUPERCURVE.curve.b()) % p, p
     )
-    if y%2 == yp:
+    if y % 2 == yp:
         return Point(SUPERCURVE.curve, x, y)
     else:
-        return Point(SUPERCURVE.curve, x, p-y)
+        return Point(SUPERCURVE.curve, x, p - y)
 
 
-def inner_product(a, b):
+def inner_product(a: List[ModP], b: List[ModP]) -> ModP:
+    """Inner-product of vectors in Z_p"""
     assert len(a) == len(b)
     return sum([ai * bi for ai, bi in zip(a, b)], ModP(0, a[0].p))
 

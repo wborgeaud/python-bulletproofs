@@ -1,3 +1,6 @@
+"""Contains classes for the prover of an inner-product argument"""
+
+
 from ecdsa import SECP256k1
 from .utils import mod_hash, point_to_b64, ModP
 from .pippenger import Pippenger, EC
@@ -6,6 +9,8 @@ SUPERCURVE = SECP256k1
 
 
 class Proof1:
+    """Proof class for Protocol 1"""
+
     def __init__(self, u_new, P_new, proof2, transcript):
         self.u_new = u_new
         self.P_new = P_new
@@ -14,6 +19,8 @@ class Proof1:
 
 
 class Verifier1:
+    """Verifier class for Protocol 1"""
+
     def __init__(self, g, h, u, P, c, proof1):
         self.g = g
         self.h = h
@@ -23,10 +30,12 @@ class Verifier1:
         self.proof1 = proof1
 
     def assertThat(self, expr: bool):
+        """Assert that expr is truthy else raise exception"""
         if not expr:
             raise Exception("Proof invalid")
 
     def verify_transcript(self):
+        """Verify a transcript to assure Fiat-Shamir was done properly"""
         lTranscript = self.proof1.transcript.split(b"&")
         self.assertThat(
             lTranscript[1]
@@ -36,9 +45,9 @@ class Verifier1:
         )
 
     def verify(self):
+        """Verifies the proof given by a prover. Raises an execption if it is invalid"""
         self.verify_transcript()
 
-        n = len(self.g)
         lTranscript = self.proof1.transcript.split(b"&")
         x = lTranscript[1]
         x = ModP(int(x), SUPERCURVE.order)
@@ -53,6 +62,8 @@ class Verifier1:
 
 
 class Proof2:
+    """Proof class for Protocol 2"""
+
     def __init__(self, a, b, xs, Ls, Rs, transcript, start_transcript=0):
         self.a = a
         self.b = b
@@ -60,10 +71,14 @@ class Proof2:
         self.Ls = Ls
         self.Rs = Rs
         self.transcript = transcript
-        self.start_transcript = start_transcript
+        self.start_transcript = (
+            start_transcript
+        )  # Start of transcript to be used if Protocol 2 is run in Protocol 1
 
 
 class Verifier2:
+    """Verifier class for Protocol 2"""
+
     def __init__(self, g, h, u, P, proof: Proof2):
         self.g = g
         self.h = h
@@ -72,10 +87,12 @@ class Verifier2:
         self.proof = proof
 
     def assertThat(self, expr):
+        """Assert that expr is truthy else raise exception"""
         if not expr:
             raise Exception("Proof invalid")
 
     def get_ss(self, xs):
+        """See page 15 in paper"""
         n = len(self.g)
         log_n = n.bit_length() - 1
         ss = []
@@ -88,6 +105,7 @@ class Verifier2:
         return ss
 
     def verify_transcript(self):
+        """Verify a transcript to assure Fiat-Shamir was done properly"""
         init_len = self.proof.start_transcript
         n = len(self.g)
         log_n = n.bit_length() - 1
@@ -110,6 +128,7 @@ class Verifier2:
             )
 
     def verify(self):
+        """Verifies the proof given by a prover. Raises an execption if it is invalid"""
         self.verify_transcript()
 
         proof = self.proof

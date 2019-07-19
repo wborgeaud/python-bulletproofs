@@ -3,18 +3,12 @@ import os
 from random import randint
 from ecdsa import SECP256k1
 
-from ..inner_product_prover import NIProver
-from ..inner_product_verifier import Verifier1
-from ..commitments import vector_commitment
-from ..pippenger import Pippenger, EC
 from ..utils import (
     mod_hash,
-    ModP,
     bytes_to_point,
     point_to_bytes,
     b64_to_point,
     point_to_b64,
-    inner_product,
 )
 from ..elliptic_curve_hash import elliptic_hash
 
