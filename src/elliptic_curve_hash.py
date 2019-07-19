@@ -3,8 +3,6 @@ from ecdsa.ellipticcurve import Point
 from ecdsa.numbertheory import square_root_mod_prime, SquareRootError
 from hashlib import sha256, md5
 
-CURVE = SECP256k1.curve
-
 def elliptic_hash(msg, CURVE):
     p = CURVE.p()
     i = 0

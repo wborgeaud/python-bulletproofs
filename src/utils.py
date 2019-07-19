@@ -56,6 +56,9 @@ class ModP:
             raise Exception("modular inverse does not exist")
         else:
             return ModP(a % self.p, self.p)
+    
+    def __eq__(self, y):
+        return (self.p == y.p) and (self.x%self.p == y.x%self.p)
 
     def __str__(self):
         return str(self.x)
@@ -70,7 +73,7 @@ def mod_hash(msg, p, non_zero=True):
         i += 1
         prefixed_msg = str(i).encode() + msg
         h = sha256(prefixed_msg).hexdigest()
-        x = int(h, 16)
+        x = int(h, 16) % 2**p.bit_length()
         if x >= p:
             continue
         elif non_zero and x == 0:

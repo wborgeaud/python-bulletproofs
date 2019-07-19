@@ -1,9 +1,6 @@
-from utils import mod_hash, point_to_b64, inner_product, ModP
-from commitments import vector_commitment
-from elliptic_curve_hash import elliptic_hash
 from ecdsa import SECP256k1
-from pippenger import Pippenger, EC
-import time
+from .utils import mod_hash, point_to_b64, ModP
+from .pippenger import Pippenger, EC
 
 SUPERCURVE = SECP256k1
 
