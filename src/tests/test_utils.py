@@ -3,18 +3,17 @@ import os
 from random import randint
 from ecdsa import SECP256k1
 
-from ..utils import (
+from ..utils.utils import (
     mod_hash,
     bytes_to_point,
     point_to_bytes,
     b64_to_point,
     point_to_b64,
 )
-from ..elliptic_curve_hash import elliptic_hash
+from ..utils.elliptic_curve_hash import elliptic_hash
 
 SUPERCURVE = SECP256k1
 CURVE = SUPERCURVE.curve
-
 
 class HashTest(unittest.TestCase):
     def test_mod_hash(self):

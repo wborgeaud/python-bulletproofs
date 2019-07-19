@@ -2,11 +2,11 @@ import unittest
 import os
 from random import randint
 from ecdsa import SECP256k1
-from ..inner_product_prover import NIProver
-from ..inner_product_verifier import Verifier1
-from ..commitments import vector_commitment
-from ..utils import mod_hash, inner_product
-from ..elliptic_curve_hash import elliptic_hash
+from ..innerproduct.inner_product_prover import NIProver
+from ..innerproduct.inner_product_verifier import Verifier1
+from ..utils.commitments import vector_commitment
+from ..utils.utils import mod_hash, inner_product
+from ..utils.elliptic_curve_hash import elliptic_hash
 
 
 SUPERCURVE = SECP256k1

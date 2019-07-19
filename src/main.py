@@ -1,11 +1,11 @@
 """Various tests"""
 
 from ecdsa import SECP256k1
-from .utils import mod_hash, inner_product
-from .inner_product_prover import NIProver
-from .inner_product_verifier import Verifier1
-from .commitments import vector_commitment
-from .elliptic_curve_hash import elliptic_hash
+from .utils.utils import mod_hash, inner_product
+from .innerproduct.inner_product_prover import NIProver
+from .innerproduct.inner_product_verifier import Verifier1
+from .utils.commitments import vector_commitment
+from .utils.elliptic_curve_hash import elliptic_hash
 
 SUPERCURVE = SECP256k1
 CURVE = SUPERCURVE.curve

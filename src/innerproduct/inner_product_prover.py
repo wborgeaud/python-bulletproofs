@@ -4,8 +4,8 @@
 import base64
 
 from .inner_product_verifier import Proof1, Proof2
-from .commitments import vector_commitment
-from .utils import point_to_b64, mod_hash, inner_product
+from ..utils.commitments import vector_commitment
+from ..utils.utils import point_to_b64, mod_hash, inner_product
 
 
 class Transcript:
