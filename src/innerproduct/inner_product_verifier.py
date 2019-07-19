@@ -63,7 +63,7 @@ class Verifier1:
 class Proof2:
     """Proof class for Protocol 2"""
 
-    def __init__(self, a, b, xs, Ls, Rs, transcript, start_transcript=0):
+    def __init__(self, a, b, xs, Ls, Rs, transcript, start_transcript: int=0):
         self.a = a
         self.b = b
         self.xs = xs

@@ -2,6 +2,7 @@
 
 
 import base64
+from typing import Optional
 
 from .inner_product_verifier import Proof1, Proof2
 from ..utils.commitments import vector_commitment
@@ -72,7 +73,7 @@ class NIProver:
 
 class FastNIProver2:
     """Class simulating a NI prover for the inner-product argument (Protocol 2)"""
-    def __init__(self, g, h, u, P, a, b, group, transcript=None):
+    def __init__(self, g, h, u, P, a, b, group, transcript: Optional[bytes]=None):
         assert len(g) == len(h) == len(a) == len(b)
         assert len(a) & (len(a) - 1) == 0
         self.log_n = len(a).bit_length() - 1
@@ -88,6 +89,9 @@ class FastNIProver2:
         if transcript:
             self.transcript.digest += transcript
             self.init_transcript_length = len(transcript.split(b"&"))
+        else:
+            self.init_transcript_length = 1
+
 
     def prove(self):
         """
