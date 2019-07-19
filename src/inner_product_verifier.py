@@ -1,6 +1,5 @@
 """Contains classes for the prover of an inner-product argument"""
 
-
 from ecdsa import SECP256k1
 from .utils import mod_hash, point_to_b64, ModP
 from .pippenger import Pippenger, EC

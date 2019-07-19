@@ -17,7 +17,7 @@ CURVE = SUPERCURVE.curve
 
 
 class HashTest(unittest.TestCase):
-    def test_modhash(self):
+    def test_mod_hash(self):
         p = 1009
         x = mod_hash(b"test", p)
         self.assertLess(x.x, p)

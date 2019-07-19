@@ -2,10 +2,11 @@
 
 from hashlib import sha256
 from typing import List
+import base64
+
 from ecdsa.ellipticcurve import Point
 from ecdsa import SECP256k1
 from ecdsa.numbertheory import square_root_mod_prime
-import base64
 
 SUPERCURVE = SECP256k1
 BYTE_LENGTH = SUPERCURVE.order.bit_length() // 8
@@ -57,7 +58,8 @@ class ModP:
         return ModP(self.p - self.x, self.p)
 
     def inv(self):
-        g, a, b = egcd(self.x, self.p)
+        """Returns the modular inverse"""
+        g, a, _ = egcd(self.x, self.p)
         if g != 1:
             raise Exception("modular inverse does not exist")
         else:
@@ -129,4 +131,3 @@ def inner_product(a: List[ModP], b: List[ModP]) -> ModP:
     """Inner-product of vectors in Z_p"""
     assert len(a) == len(b)
     return sum([ai * bi for ai, bi in zip(a, b)], ModP(0, a[0].p))
-
