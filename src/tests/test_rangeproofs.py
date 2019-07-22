@@ -101,10 +101,14 @@ class RangeProofTest(unittest.TestCase):
         V = commitment(g, h, v+1, gamma)
         Prov = NIRangeProver(v, n, g, h, gs, hs, gamma, u, SUPERCURVE, seeds[6])
         proof = Prov.prove()
-        randind = randint(0, len(proof.transcript) - 1)
-        proof.transcript = (
-            proof.transcript[:randind] + os.urandom(1) + proof.transcript[randind + 1 :]
-        )
+        while True:
+            randind = randint(0, len(proof.transcript) - 1)
+            new = str(randint(0,9)).encode()
+            if proof.transcript[randind] not in [b'&', new]:
+                proof.transcript = (
+                    proof.transcript[:randind] + new + proof.transcript[randind + 1 :]
+                )
+                break
         Verif = RangeVerifier(V, g, h, gs, hs, u, proof)
         with self.subTest(v=v, n=n, randind=randind):
             with self.assertRaisesRegex(Exception, "Proof invalid"):
