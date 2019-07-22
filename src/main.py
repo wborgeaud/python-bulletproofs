@@ -13,7 +13,6 @@ CURVE = SUPERCURVE.curve
 p = SUPERCURVE.order
 
 seeds = [os.urandom(10) for _ in range(7)]
-p = SUPERCURVE.order
 v, n = ModP(15,p), 16
 gs = [elliptic_hash(str(i).encode() + seeds[0], CURVE) for i in range(n)]
 hs = [elliptic_hash(str(i).encode() + seeds[1], CURVE) for i in range(n)]
