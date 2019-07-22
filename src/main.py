@@ -12,21 +12,20 @@ SUPERCURVE = SECP256k1
 CURVE = SUPERCURVE.curve
 p = SUPERCURVE.order
 
-seeds = [os.urandom(10) for _ in range(6)]
+seeds = [os.urandom(10) for _ in range(7)]
 p = SUPERCURVE.order
-v, n = ModP(15,p), 4
+v, n = ModP(15,p), 16
 gs = [elliptic_hash(str(i).encode() + seeds[0], CURVE) for i in range(n)]
 hs = [elliptic_hash(str(i).encode() + seeds[1], CURVE) for i in range(n)]
-g = elliptic_hash(b'test', CURVE)
-h = elliptic_hash(b'hehe', CURVE)
-gamma = mod_hash(b'bam',p)
+g = elliptic_hash(seeds[2], CURVE)
+h = elliptic_hash(seeds[3], CURVE)
+u = elliptic_hash(seeds[4], CURVE)
+gamma = mod_hash(seeds[5],p)
 
 V = commitment(g,h,v,gamma)
 
 
-Prov = NIRangeProver(v,n,g,h,gs,hs,gamma,SUPERCURVE,b'seed')
-proof, x,y,z = Prov.prove()
-Verif = RangeVerifier(V,g,h,gs,hs,x,y,z,proof)
+Prov = NIRangeProver(v,n,g,h,gs,hs,gamma,u,SUPERCURVE,seeds[6])
+proof = Prov.prove()
+Verif = RangeVerifier(V,g,h,gs,hs,u,proof)
 Verif.verify()
-# Verif = Verifier2(g, h, u, 2*P, proof)
-# Verif.verify()

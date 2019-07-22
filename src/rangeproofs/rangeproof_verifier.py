@@ -1,8 +1,9 @@
 from ecdsa import SECP256k1
 from ecdsa.ellipticcurve import Point
 
-from ..utils.utils import inner_product, ModP
+from ..utils.utils import inner_product, ModP, point_to_b64
 from ..utils.commitments import vector_commitment
+from ..innerproduct.inner_product_verifier import Verifier1
 
 SUPERCURVE = SECP256k1
 
@@ -10,30 +11,28 @@ SUPERCURVE = SECP256k1
 class Proof:
     """Proof class for Protocol 1"""
 
-    def __init__(self, taux, mu, t_hat, ls, rs, T1, T2, A, S):
+    def __init__(self, taux, mu, t_hat, T1, T2, A, S, innerProof, transcript):
         self.taux = taux
         self.mu = mu
         self.t_hat = t_hat
-        self.ls = ls
-        self.rs = rs
         self.T1 = T1
         self.T2 = T2
         self.A = A
         self.S = S
+        self.innerProof = innerProof
+        self.transcript = transcript
 
 
 class RangeVerifier:
-    """Verifier class for Protocol 1"""
+    """Verifier class for Range Proofs"""
 
-    def __init__(self, V, g, h, gs, hs, x, y, z, proof: Proof):
+    def __init__(self, V, g, h, gs, hs, u, proof: Proof):
         self.V = V
         self.g = g
         self.h = h
         self.gs = gs
         self.hs = hs
-        self.x = x
-        self.y = y
-        self.z = z
+        self.u = u
         self.proof = proof
 
     def assertThat(self, expr: bool):
@@ -43,7 +42,29 @@ class RangeVerifier:
 
     def verify_transcript(self):
         """Verify a transcript to assure Fiat-Shamir was done properly"""
-        pass
+        proof = self.proof 
+        p = proof.taux.p
+        lTranscript = proof.transcript.split(b"&")
+        self.assertThat(
+            lTranscript[1]
+            == point_to_b64(proof.A)
+        )
+        self.assertThat(
+            lTranscript[2]
+            == point_to_b64(proof.S)
+        )
+        self.y = ModP(int(lTranscript[3]), p)
+        self.z = ModP(int(lTranscript[4]), p)
+        self.assertThat(
+            lTranscript[5]
+            == point_to_b64(proof.T1)
+        )
+        self.assertThat(
+            lTranscript[6]
+            == point_to_b64(proof.T2)
+        )
+        self.x = ModP(int(lTranscript[7]), p)
+
 
     def verify(self):
         """Verifies the proof given by a prover. Raises an execption if it is invalid"""
@@ -69,10 +90,12 @@ class RangeVerifier:
         )
 
         P = self._getP(x, y, z, proof.A, proof.S, gs, hsp, n)
-        self.assertThat(
-            P == vector_commitment(gs, hsp, proof.ls, proof.rs) + proof.mu * h
-        )
-        self.assertThat(proof.t_hat == inner_product(proof.ls, proof.rs))
+        # self.assertThat(
+        #     P == vector_commitment(gs, hsp, proof.ls, proof.rs) + proof.mu * h
+        # )
+        # self.assertThat(proof.t_hat == inner_product(proof.ls, proof.rs))
+        InnerVerif = Verifier1(gs, hsp, self.u, P + (-proof.mu)*h, proof.t_hat, proof.innerProof)
+        return InnerVerif.verify()
 
     def _getP(self, x, y, z, A, S, gs, hsp, n):
         return (
