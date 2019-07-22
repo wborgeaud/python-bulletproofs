@@ -33,6 +33,9 @@ class ModP:
             return ModP(self.x + y, self.p)
         assert self.p == y.p
         return ModP((self.x + y.x) % self.p, self.p)
+    
+    def __radd__(self, y):
+        return self + y
 
     def __mul__(self, y):
         if isinstance(y, int):
@@ -44,9 +47,12 @@ class ModP:
 
     def __sub__(self, y):
         if isinstance(y, int):
-            return ModP(self.x - y, self.p)
+            return ModP((self.x - y) % self.p, self.p)
         assert self.p == y.p
         return ModP((self.x - y.x) % self.p, self.p)
+    
+    def __rsub__(self, y):
+        return -(self - y)
 
     def __pow__(self, n):
         return ModP(pow(self.x, n, self.p), self.p)

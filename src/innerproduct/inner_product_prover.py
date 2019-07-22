@@ -7,32 +7,7 @@ from typing import Optional
 from .inner_product_verifier import Proof1, Proof2
 from ..utils.commitments import vector_commitment
 from ..utils.utils import point_to_b64, mod_hash, inner_product
-
-
-class Transcript:
-    """
-    Transcript class.
-    Contains all parameters used to generate randomness using Fiat-Shamir
-    Separate every entity by a '&'. 
-    """
-
-    def __init__(self, seed=b""):
-        self.digest = base64.b64encode(seed) + b"&"
-
-    def add_point(self, g):
-        """Add an elliptic curve point to the transcript"""
-        self.digest += point_to_b64(g)
-        self.digest += b"&"
-
-    def add_list_points(self, gs):
-        """Add a list of elliptic curve point to the transcript"""
-        for g in gs:
-            self.add_point(g)
-
-    def add_number(self, x):
-        """Add a number to the transcript"""
-        self.digest += str(x).encode()
-        self.digest += b"&"
+from ..utils.transcript import Transcript
 
 
 class NIProver:
@@ -54,7 +29,8 @@ class NIProver:
         Proves the inner-product argument following Protocol 1 in the paper
         Returns a Proof1 object.
         """
-        x = mod_hash(self.transcript.digest, self.group.order)
+        # x = mod_hash(self.transcript.digest, self.group.order)
+        x = self.transcript.get_modp(self.group.order)
         self.transcript.add_number(x)
         P_new = self.P + (x * self.c) * self.u
         u_new = x * self.u
@@ -126,7 +102,8 @@ class FastNIProver2:
             Ls.append(L)
             Rs.append(R)
             self.transcript.add_list_points([L, R])
-            x = mod_hash(self.transcript.digest, self.group.order)
+            # x = mod_hash(self.transcript.digest, self.group.order)
+            x = self.transcript.get_modp(self.group.order)
             xs.append(x)
             self.transcript.add_number(x)
             gp = [x.inv() * gi_fh + x * gi_sh for gi_fh, gi_sh in zip(gp[:np], gp[np:])]

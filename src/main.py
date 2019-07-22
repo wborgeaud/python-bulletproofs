@@ -2,11 +2,11 @@
 
 from ecdsa import SECP256k1
 import os
-from .utils.utils import mod_hash, inner_product
-from .innerproduct.inner_product_prover import NIProver, FastNIProver2
-from .innerproduct.inner_product_verifier import Verifier1, Verifier2
-from .utils.commitments import vector_commitment
+from .utils.utils import mod_hash, inner_product, ModP
+from .utils.commitments import vector_commitment, commitment
 from .utils.elliptic_curve_hash import elliptic_hash
+from .rangeproofs.rangeproof_prover import NIRangeProver
+from .rangeproofs.rangeproof_verifier import RangeVerifier
 
 SUPERCURVE = SECP256k1
 CURVE = SUPERCURVE.curve
@@ -14,14 +14,19 @@ p = SUPERCURVE.order
 
 seeds = [os.urandom(10) for _ in range(6)]
 p = SUPERCURVE.order
-N = 16
-g = [elliptic_hash(str(i).encode() + seeds[0], CURVE) for i in range(N)]
-h = [elliptic_hash(str(i).encode() + seeds[1], CURVE) for i in range(N)]
-u = elliptic_hash(seeds[2], CURVE)
-a = [mod_hash(str(i).encode() + seeds[3], p) for i in range(N)]
-b = [mod_hash(str(i).encode() + seeds[4], p) for i in range(N)]
-P = vector_commitment(g, h, a, b) + inner_product(a, b) * u
-Prov = FastNIProver2(g, h, u, P, a, b, SUPERCURVE)
-proof = Prov.prove()
-Verif = Verifier2(g, h, u, 2*P, proof)
+v, n = ModP(15,p), 4
+gs = [elliptic_hash(str(i).encode() + seeds[0], CURVE) for i in range(n)]
+hs = [elliptic_hash(str(i).encode() + seeds[1], CURVE) for i in range(n)]
+g = elliptic_hash(b'test', CURVE)
+h = elliptic_hash(b'hehe', CURVE)
+gamma = mod_hash(b'bam',p)
+
+V = commitment(g,h,v,gamma)
+
+
+Prov = NIRangeProver(v,n,g,h,gs,hs,gamma,SUPERCURVE,b'seed')
+proof, x,y,z = Prov.prove()
+Verif = RangeVerifier(V,g,h,gs,hs,x,y,z,proof)
 Verif.verify()
+# Verif = Verifier2(g, h, u, 2*P, proof)
+# Verif.verify()
