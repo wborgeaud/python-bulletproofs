@@ -4,12 +4,12 @@ from hashlib import sha256
 from typing import List
 import base64
 
-from ecdsa.ellipticcurve import Point
-from ecdsa import SECP256k1
-from ecdsa.numbertheory import square_root_mod_prime
+from fastecdsa.point import Point
+from fastecdsa.curve import secp256k1
+from fastecdsa.util import mod_sqrt
 
-SUPERCURVE = SECP256k1
-BYTE_LENGTH = SUPERCURVE.order.bit_length() // 8
+CURVE = secp256k1
+BYTE_LENGTH = CURVE.q.bit_length() // 8
 
 
 def egcd(a, b):
@@ -33,7 +33,7 @@ class ModP:
             return ModP(self.x + y, self.p)
         assert self.p == y.p
         return ModP((self.x + y.x) % self.p, self.p)
-    
+
     def __radd__(self, y):
         return self + y
 
@@ -50,7 +50,7 @@ class ModP:
             return ModP((self.x - y) % self.p, self.p)
         assert self.p == y.p
         return ModP((self.x - y.x) % self.p, self.p)
-    
+
     def __rsub__(self, y):
         return -(self - y)
 
@@ -99,10 +99,10 @@ def mod_hash(msg: bytes, p: int, non_zero: bool = True) -> ModP:
 
 def point_to_bytes(g: Point) -> bytes:
     """Takes an EC point and returns the compressed bytes representation"""
-    if g == Point(None, None, None):
+    if g == Point.IDENTITY_ELEMENT:
         return b"\x00"
-    x_enc = g.x().to_bytes(BYTE_LENGTH, "big")
-    prefix = b"\x03" if g.y() % 2 else b"\x02"
+    x_enc = g.x.to_bytes(BYTE_LENGTH, "big")
+    prefix = b"\x03" if g.y % 2 else b"\x02"
     return prefix + x_enc
 
 
@@ -119,18 +119,16 @@ def b64_to_point(s: bytes) -> Point:
 def bytes_to_point(b: bytes) -> Point:
     """Takes a compressed bytes representation and returns the corresponding point"""
     if b == 0:
-        return Point(None, None, None)
-    p = SUPERCURVE.curve.p()
+        return Point.IDENTITY_ELEMENT
+    p = CURVE.p
     yp, x_enc = b[0], b[1:]
     yp = 0 if yp == 2 else 1
     x = int.from_bytes(x_enc, "big")
-    y = square_root_mod_prime(
-        (x ** 3 + SUPERCURVE.curve.a() * x + SUPERCURVE.curve.b()) % p, p
-    )
+    y = mod_sqrt((x ** 3 + CURVE.a * x + CURVE.b) % p, p)
     if y % 2 == yp:
-        return Point(SUPERCURVE.curve, x, y)
+        return Point(x, y, CURVE)
     else:
-        return Point(SUPERCURVE.curve, x, p - y)
+        return Point(x, p - y, CURVE)
 
 
 def inner_product(a: List[ModP], b: List[ModP]) -> ModP:

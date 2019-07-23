@@ -1,10 +1,10 @@
 """Contains classes for the prover of an inner-product argument"""
 
-from ecdsa import SECP256k1
+from fastecdsa.curve import secp256k1, Curve
 from ..utils.utils import mod_hash, point_to_b64, ModP
 from ..pippenger import PipSECP256k1
 
-SUPERCURVE = SECP256k1
+SUPERCURVE: Curve = secp256k1
 
 
 class Proof1:
@@ -38,9 +38,7 @@ class Verifier1:
         lTranscript = self.proof1.transcript.split(b"&")
         self.assertThat(
             lTranscript[1]
-            == str(
-                mod_hash(b"&".join(lTranscript[:1]) + b"&", SUPERCURVE.order)
-            ).encode()
+            == str(mod_hash(b"&".join(lTranscript[:1]) + b"&", SUPERCURVE.q)).encode()
         )
 
     def verify(self):
@@ -49,7 +47,7 @@ class Verifier1:
 
         lTranscript = self.proof1.transcript.split(b"&")
         x = lTranscript[1]
-        x = ModP(int(x), SUPERCURVE.order)
+        x = ModP(int(x), SUPERCURVE.q)
         self.assertThat(self.proof1.P_new == self.P + (x * self.c) * self.u)
         self.assertThat(self.proof1.u_new == x * self.u)
 
@@ -63,7 +61,7 @@ class Verifier1:
 class Proof2:
     """Proof class for Protocol 2"""
 
-    def __init__(self, a, b, xs, Ls, Rs, transcript, start_transcript: int=0):
+    def __init__(self, a, b, xs, Ls, Rs, transcript, start_transcript: int = 0):
         self.a = a
         self.b = b
         self.xs = xs
@@ -96,7 +94,7 @@ class Verifier2:
         log_n = n.bit_length() - 1
         ss = []
         for i in range(1, n + 1):
-            tmp = ModP(1, SUPERCURVE.order)
+            tmp = ModP(1, SUPERCURVE.q)
             for j in range(0, log_n):
                 b = 1 if bin(i - 1)[2:].zfill(log_n)[j] == "1" else -1
                 tmp *= xs[j] if b == 1 else xs[j].inv()
@@ -121,7 +119,7 @@ class Verifier2:
                 == str(
                     mod_hash(
                         b"&".join(lTranscript[: init_len + i * 3 + 2]) + b"&",
-                        SUPERCURVE.order,
+                        SUPERCURVE.q,
                     )
                 ).encode()
             )

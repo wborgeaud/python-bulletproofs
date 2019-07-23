@@ -1,12 +1,10 @@
 """Contains classes for the prover of an inner-product argument"""
 
-
-import base64
 from typing import Optional
 
 from .inner_product_verifier import Proof1, Proof2
 from ..utils.commitments import vector_commitment
-from ..utils.utils import point_to_b64, mod_hash, inner_product
+from ..utils.utils import inner_product
 from ..utils.transcript import Transcript
 
 
@@ -30,7 +28,7 @@ class NIProver:
         Returns a Proof1 object.
         """
         # x = mod_hash(self.transcript.digest, self.group.order)
-        x = self.transcript.get_modp(self.group.order)
+        x = self.transcript.get_modp(self.group.q)
         self.transcript.add_number(x)
         P_new = self.P + (x * self.c) * self.u
         u_new = x * self.u
@@ -103,7 +101,7 @@ class FastNIProver2:
             Rs.append(R)
             self.transcript.add_list_points([L, R])
             # x = mod_hash(self.transcript.digest, self.group.order)
-            x = self.transcript.get_modp(self.group.order)
+            x = self.transcript.get_modp(self.group.q)
             xs.append(x)
             self.transcript.add_number(x)
             gp = [x.inv() * gi_fh + x * gi_sh for gi_fh, gi_sh in zip(gp[:np], gp[np:])]
