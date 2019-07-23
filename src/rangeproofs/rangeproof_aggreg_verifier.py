@@ -1,8 +1,6 @@
 from ecdsa import SECP256k1
-from ecdsa.ellipticcurve import Point
 
-from ..utils.utils import inner_product, ModP, point_to_b64
-from ..utils.commitments import vector_commitment
+from ..utils.utils import ModP, point_to_b64
 from ..innerproduct.inner_product_verifier import Verifier1
 from ..pippenger import PipSECP256k1
 
@@ -24,7 +22,7 @@ class Proof:
         self.transcript = transcript
 
 
-class RangeVerifier:
+class AggregRangeVerifier:
     """Verifier class for Range Proofs"""
 
     def __init__(self, Vs, g, h, gs, hs, u, proof: Proof):
@@ -74,13 +72,13 @@ class RangeVerifier:
         delta_yz = (z - z ** 2) * sum(
             [y ** i for i in range(nm)], ModP(0, SUPERCURVE.order)
         ) - sum(
-            [(z ** (j + 2)) * ModP(2 ** n - 1, SUPERCURVE.order) for j in range(1, m + 1)]
+            [
+                (z ** (j + 2)) * ModP(2 ** n - 1, SUPERCURVE.order)
+                for j in range(1, m + 1)
+            ]
         )
         hsp = [(y.inv() ** i) * hs[i] for i in range(nm)]
 
-        ### DEBUG ###
-        d1 = proof.t_hat * g + proof.taux * h
-        ### DEBUG ###
         self.assertThat(
             proof.t_hat * g + proof.taux * h
             == PipSECP256k1.multiexp(
@@ -90,10 +88,6 @@ class RangeVerifier:
         )
 
         P = self._getP(x, y, z, proof.A, proof.S, gs, hsp, n, m)
-        # self.assertThat(
-        #     P == vector_commitment(gs, hsp, proof.ls, proof.rs) + proof.mu * h
-        # )
-        # self.assertThat(proof.t_hat == inner_product(proof.ls, proof.rs))
         InnerVerif = Verifier1(
             gs, hsp, self.u, P + (-proof.mu) * h, proof.t_hat, proof.innerProof
         )
