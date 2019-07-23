@@ -1,6 +1,6 @@
 """Various tests"""
 
-from ecdsa import SECP256k1
+from fastecdsa.curve import secp256k1
 import os
 from .utils.utils import mod_hash, inner_product, ModP
 from .utils.commitments import vector_commitment, commitment
@@ -12,9 +12,8 @@ from .rangeproofs.rangeproof_aggreg_prover import AggregNIRangeProver
 from .rangeproofs.rangeproof_aggreg_verifier import AggregRangeVerifier
 
 
-SUPERCURVE = SECP256k1
-CURVE = SUPERCURVE.curve
-p = SUPERCURVE.order
+CURVE = secp256k1
+p = CURVE.q
 
 # seeds = [os.urandom(10) for _ in range(7)]
 # v, n = ModP(15,p), 16
@@ -46,7 +45,7 @@ gammas = [mod_hash(seeds[5], p) for _ in range(m)]
 Vs = [commitment(g, h, vs[i], gammas[i]) for i in range(m)]
 
 
-Prov = AggregNIRangeProver(vs, n, g, h, gs, hs, gammas, u, SUPERCURVE, seeds[6])
+Prov = AggregNIRangeProver(vs, n, g, h, gs, hs, gammas, u, CURVE, seeds[6])
 proof = Prov.prove()
 Verif = AggregRangeVerifier(Vs, g, h, gs, hs, u, proof)
 Verif.verify()

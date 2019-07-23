@@ -1,4 +1,4 @@
-from ecdsa.ellipticcurve import Point
+from fastecdsa.point import Point
 from ..pippenger import PipSECP256k1
 
 
@@ -21,4 +21,4 @@ def _mult(a: int, g: Point) -> Point:
 
 
 def _inv(g: Point) -> Point:
-    return Point(g.curve(), g.x(), -g.y())
+    return Point(g.x, -g.y, g.curve)

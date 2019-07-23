@@ -1,7 +1,7 @@
 import unittest
 import os
 from random import randint
-from ecdsa import SECP256k1
+from fastecdsa.curve import secp256k1
 from ..innerproduct.inner_product_prover import NIProver, FastNIProver2
 from ..innerproduct.inner_product_verifier import Verifier1, Verifier2
 from ..utils.commitments import vector_commitment, commitment
@@ -10,9 +10,8 @@ from ..utils.elliptic_curve_hash import elliptic_hash
 from ..rangeproofs import NIRangeProver, RangeVerifier
 
 
-SUPERCURVE = SECP256k1
-CURVE = SUPERCURVE.curve
-p = SUPERCURVE.order
+CURVE = secp256k1
+p = CURVE.q
 
 
 class RangeProofTest(unittest.TestCase):
@@ -27,7 +26,7 @@ class RangeProofTest(unittest.TestCase):
             u = elliptic_hash(seeds[4], CURVE)
             gamma = mod_hash(seeds[5], p)
             V = commitment(g, h, v, gamma)
-            Prov = NIRangeProver(v, n, g, h, gs, hs, gamma, u, SUPERCURVE, seeds[6])
+            Prov = NIRangeProver(v, n, g, h, gs, hs, gamma, u, CURVE, seeds[6])
             proof = Prov.prove()
             Verif = RangeVerifier(V, g, h, gs, hs, u, proof)
             with self.subTest(seeds=seeds):
@@ -49,7 +48,7 @@ class RangeProofTest(unittest.TestCase):
                 u = elliptic_hash(seeds[4], CURVE)
                 gamma = mod_hash(seeds[5], p)
                 V = commitment(g, h, v, gamma)
-                Prov = NIRangeProver(v, n, g, h, gs, hs, gamma, u, SUPERCURVE, seeds[6])
+                Prov = NIRangeProver(v, n, g, h, gs, hs, gamma, u, CURVE, seeds[6])
                 proof = Prov.prove()
                 Verif = RangeVerifier(V, g, h, gs, hs, u, proof)
                 with self.subTest(v=v, n=n, seeds=seeds):
@@ -65,7 +64,7 @@ class RangeProofTest(unittest.TestCase):
         u = elliptic_hash(seeds[4], CURVE)
         gamma = mod_hash(seeds[5], p)
         V = commitment(g, h, v, gamma)
-        Prov = NIRangeProver(v, n, g, h, gs, hs, gamma, u, SUPERCURVE, seeds[6])
+        Prov = NIRangeProver(v, n, g, h, gs, hs, gamma, u, CURVE, seeds[6])
         proof = Prov.prove()
         Verif = RangeVerifier(V, g, h, gs, hs, u, proof)
         with self.subTest(v=v, n=n):
@@ -82,7 +81,7 @@ class RangeProofTest(unittest.TestCase):
         u = elliptic_hash(seeds[4], CURVE)
         gamma = mod_hash(seeds[5], p)
         V = commitment(g, h, v+1, gamma)
-        Prov = NIRangeProver(v, n, g, h, gs, hs, gamma, u, SUPERCURVE, seeds[6])
+        Prov = NIRangeProver(v, n, g, h, gs, hs, gamma, u, CURVE, seeds[6])
         proof = Prov.prove()
         Verif = RangeVerifier(V, g, h, gs, hs, u, proof)
         with self.subTest(v=v, n=n):
@@ -99,7 +98,7 @@ class RangeProofTest(unittest.TestCase):
         u = elliptic_hash(seeds[4], CURVE)
         gamma = mod_hash(seeds[5], p)
         V = commitment(g, h, v+1, gamma)
-        Prov = NIRangeProver(v, n, g, h, gs, hs, gamma, u, SUPERCURVE, seeds[6])
+        Prov = NIRangeProver(v, n, g, h, gs, hs, gamma, u, CURVE, seeds[6])
         proof = Prov.prove()
         while True:
             randind = randint(0, len(proof.transcript) - 1)

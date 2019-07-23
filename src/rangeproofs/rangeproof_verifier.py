@@ -1,12 +1,10 @@
-from ecdsa import SECP256k1
-from ecdsa.ellipticcurve import Point
+from fastecdsa.curve import secp256k1
 
-from ..utils.utils import inner_product, ModP, point_to_b64
-from ..utils.commitments import vector_commitment
+from ..utils.utils import ModP, point_to_b64
 from ..innerproduct.inner_product_verifier import Verifier1
 from ..pippenger import PipSECP256k1
 
-SUPERCURVE = SECP256k1
+CURVE = secp256k1
 
 
 class Proof:
@@ -69,8 +67,8 @@ class RangeVerifier:
 
         n = len(gs)
         delta_yz = (z - z ** 2) * sum(
-            [y ** i for i in range(n)], ModP(0, SUPERCURVE.order)
-        ) - (z ** 3) * ModP(2 ** n - 1, SUPERCURVE.order)
+            [y ** i for i in range(n)], ModP(0, CURVE.q)
+        ) - (z ** 3) * ModP(2 ** n - 1, CURVE.q)
         hsp = [(y.inv() ** i) * hs[i] for i in range(n)]
         self.assertThat(
             proof.t_hat * g + proof.taux * h

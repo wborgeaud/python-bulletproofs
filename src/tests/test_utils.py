@@ -1,7 +1,7 @@
 import unittest
 import os
 from random import randint
-from ecdsa import SECP256k1
+from fastecdsa.curve import secp256k1
 
 from ..utils.utils import (
     mod_hash,
@@ -12,8 +12,8 @@ from ..utils.utils import (
 )
 from ..utils.elliptic_curve_hash import elliptic_hash
 
-SUPERCURVE = SECP256k1
-CURVE = SUPERCURVE.curve
+CURVE = secp256k1
+
 
 class HashTest(unittest.TestCase):
     def test_mod_hash(self):
@@ -33,21 +33,21 @@ class HashTest(unittest.TestCase):
             msg = os.urandom(10)
             x = elliptic_hash(msg, CURVE)
             with self.subTest(msg=msg):
-                self.assertTrue(CURVE.contains_point(x.x(), x.y()))
+                self.assertTrue(CURVE.is_point_on_curve((x.x, x.y)))
 
 
 class ConversionTest(unittest.TestCase):
     def test_point_to_bytes(self):
         for _ in range(100):
-            e = randint(0, SUPERCURVE.order)
-            x = e * SUPERCURVE.generator
+            e = randint(0, CURVE.q)
+            x = e * CURVE.G
             with self.subTest(e=e):
                 self.assertEqual(bytes_to_point(point_to_bytes(x)), x)
 
     def test_point_to_b64(self):
         for _ in range(100):
-            e = randint(0, SUPERCURVE.order)
-            x = e * SUPERCURVE.generator
+            e = randint(0, CURVE.q)
+            x = e * CURVE.G
             with self.subTest(e=e):
                 self.assertEqual(b64_to_point(point_to_b64(x)), x)
 

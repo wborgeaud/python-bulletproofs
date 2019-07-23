@@ -1,10 +1,10 @@
-from ecdsa import SECP256k1
+from fastecdsa.curve import secp256k1
 
 from ..utils.utils import ModP, point_to_b64
 from ..innerproduct.inner_product_verifier import Verifier1
 from ..pippenger import PipSECP256k1
 
-SUPERCURVE = SECP256k1
+CURVE = secp256k1
 
 
 class Proof:
@@ -70,10 +70,10 @@ class AggregRangeVerifier:
         n = nm // m
 
         delta_yz = (z - z ** 2) * sum(
-            [y ** i for i in range(nm)], ModP(0, SUPERCURVE.order)
+            [y ** i for i in range(nm)], ModP(0, CURVE.q)
         ) - sum(
             [
-                (z ** (j + 2)) * ModP(2 ** n - 1, SUPERCURVE.order)
+                (z ** (j + 2)) * ModP(2 ** n - 1, CURVE.q)
                 for j in range(1, m + 1)
             ]
         )

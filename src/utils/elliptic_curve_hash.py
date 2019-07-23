@@ -1,6 +1,6 @@
 from fastecdsa.point import Point
 from fastecdsa.curve import Curve
-from ecdsa.numbertheory import square_root_mod_prime, SquareRootError
+from fastecdsa.util import mod_sqrt
 from hashlib import sha256, md5
 
 
@@ -16,11 +16,9 @@ def elliptic_hash(msg: bytes, CURVE: Curve):
             continue
 
         y_sq = (x ** 3 + CURVE.a * x + CURVE.b) % p
-        try:
-            y = square_root_mod_prime(y_sq, p)
-        except SquareRootError:
-            continue
+        y = mod_sqrt(y_sq, p)[0]
 
-        b = int(md5(prefixed_msg).hexdigest(), 16) % 2
-        return Point(x, y, CURVE) if b else Point(x, p - y, CURVE)
+        if CURVE.is_point_on_curve((x, y)):
+            b = int(md5(prefixed_msg).hexdigest(), 16) % 2
+            return Point(x, y, CURVE) if b else Point(x, p - y, CURVE)
 

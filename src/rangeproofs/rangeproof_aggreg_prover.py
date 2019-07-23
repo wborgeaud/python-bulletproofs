@@ -6,6 +6,7 @@ from .rangeproof_verifier import Proof
 from ..innerproduct.inner_product_prover import NIProver
 from ..pippenger import PipSECP256k1
 
+
 class AggregNIRangeProver:
     def __init__(
         self,
@@ -44,41 +45,41 @@ class AggregNIRangeProver:
         for v in vs:
             aL += list(map(int, reversed(bin(v.x)[2:].zfill(n))))[:n]
         aR = [
-            (x - 1) % self.group.order for x in aL
+            (x - 1) % self.group.q for x in aL
         ]  # TODO implement inverse of elliptic curve point  to compute -1 * g instead of multiplying by p-1
 
-        alpha = mod_hash(b"alpha" + self.transcript.digest, self.group.order)
+        alpha = mod_hash(b"alpha" + self.transcript.digest, self.group.q)
         A = vector_commitment(gs, hs, aL, aR) + alpha * h
         sL = [
-            mod_hash(str(i).encode() + self.transcript.digest, self.group.order)
+            mod_hash(str(i).encode() + self.transcript.digest, self.group.q)
             for i in range(n * m)
         ]
         sR = [
-            mod_hash(str(i).encode() + self.transcript.digest, self.group.order)
+            mod_hash(str(i).encode() + self.transcript.digest, self.group.q)
             for i in range(n * m, 2 * n * m)
         ]
-        rho = mod_hash(str(2 * n).encode() + self.transcript.digest, self.group.order)
+        rho = mod_hash(str(2 * n).encode() + self.transcript.digest, self.group.q)
         S = vector_commitment(gs, hs, sL, sR) + rho * h
         self.transcript.add_list_points([A, S])
-        y = self.transcript.get_modp(self.group.order)
+        y = self.transcript.get_modp(self.group.q)
         self.transcript.add_number(y)
-        z = self.transcript.get_modp(self.group.order)
+        z = self.transcript.get_modp(self.group.q)
         self.transcript.add_number(z)
 
         t1, t2 = self._get_polynomial_coeffs(aL, aR, sL, sR, y, z)
-        tau1 = mod_hash(b"tau1" + self.transcript.digest, self.group.order)
-        tau2 = mod_hash(b"tau2" + self.transcript.digest, self.group.order)
+        tau1 = mod_hash(b"tau1" + self.transcript.digest, self.group.q)
+        tau2 = mod_hash(b"tau2" + self.transcript.digest, self.group.q)
         T1 = commitment(self.g, h, t1, tau1)
         T2 = commitment(self.g, h, t2, tau2)
         self.transcript.add_list_points([T1, T2])
-        x = self.transcript.get_modp(self.group.order)
+        x = self.transcript.get_modp(self.group.q)
         self.transcript.add_number(x)
         taux, mu, t_hat, ls, rs = self._final_compute(
             aL, aR, sL, sR, y, z, x, tau1, tau2, alpha, rho
         )
 
         # return Proof(taux, mu, t_hat, ls, rs, T1, T2, A, S), x,y,z
-        hsp = [(y.inv() ** i) * hs[i] for i in range(n*m)]
+        hsp = [(y.inv() ** i) * hs[i] for i in range(n * m)]
         # P = (
         #     A
         #     + x * S
@@ -105,11 +106,11 @@ class AggregNIRangeProver:
 
         ### DEBUG ###
         delta_yz = (z - z ** 2) * sum(
-            [y ** i for i in range(n*m)], ModP(0, self.group.order)
+            [y ** i for i in range(n * m)], ModP(0, self.group.q)
         ) - sum(
-            [(z ** (j + 2)) * ModP(2 ** n - 1, self.group.order) for j in range(1, m + 1)]
+            [(z ** (j + 2)) * ModP(2 ** n - 1, self.group.q) for j in range(1, m + 1)]
         )
-        t0 = sum([vs[j] * (z**(2+j)) for j in range(m)])+delta_yz 
+        t0 = sum([vs[j] * (z ** (2 + j)) for j in range(m)]) + delta_yz
         ### DEBUG ###
         return Proof(taux, mu, t_hat, T1, T2, A, S, innerProof, self.transcript.digest)
 

@@ -1,16 +1,15 @@
 import unittest
 import os
 from random import randint
-from ecdsa import SECP256k1
+from fastecdsa.curve import secp256k1
 from ..utils.commitments import commitment
 from ..utils.utils import mod_hash, ModP
 from ..utils.elliptic_curve_hash import elliptic_hash
 from ..rangeproofs import AggregNIRangeProver, AggregRangeVerifier
 
 
-SUPERCURVE = SECP256k1
-CURVE = SUPERCURVE.curve
-p = SUPERCURVE.order
+CURVE = secp256k1
+p = secp256k1.q
 
 
 class AggregRangeProofTest(unittest.TestCase):
@@ -31,7 +30,7 @@ class AggregRangeProofTest(unittest.TestCase):
             gammas = [mod_hash(seeds[5], p) for _ in range(m)]
             Vs = [commitment(g, h, vs[i], gammas[i]) for i in range(m)]
             Prov = AggregNIRangeProver(
-                vs, n, g, h, gs, hs, gammas, u, SUPERCURVE, seeds[6]
+                vs, n, g, h, gs, hs, gammas, u, CURVE, seeds[6]
             )
             proof = Prov.prove()
             Verif = AggregRangeVerifier(Vs, g, h, gs, hs, u, proof)
@@ -61,7 +60,7 @@ class AggregRangeProofTest(unittest.TestCase):
                 gammas = [mod_hash(seeds[5], p) for _ in range(m)]
                 Vs = [commitment(g, h, vs[i], gammas[i]) for i in range(m)]
                 Prov = AggregNIRangeProver(
-                    vs, n, g, h, gs, hs, gammas, u, SUPERCURVE, seeds[6]
+                    vs, n, g, h, gs, hs, gammas, u, CURVE, seeds[6]
                 )
                 proof = Prov.prove()
                 Verif = AggregRangeVerifier(Vs, g, h, gs, hs, u, proof)
@@ -88,7 +87,7 @@ class AggregRangeProofTest(unittest.TestCase):
                 gammas = [mod_hash(seeds[5], p) for _ in range(m)]
                 Vs = [commitment(g, h, vs[i], gammas[i]) for i in range(m)]
                 Prov = AggregNIRangeProver(
-                    vs, n, g, h, gs, hs, gammas, u, SUPERCURVE, seeds[6]
+                    vs, n, g, h, gs, hs, gammas, u, CURVE, seeds[6]
                 )
                 proof = Prov.prove()
                 Verif = AggregRangeVerifier(Vs, g, h, gs, hs, u, proof)
@@ -108,7 +107,7 @@ class AggregRangeProofTest(unittest.TestCase):
         u = elliptic_hash(seeds[4], CURVE)
         gammas = [mod_hash(seeds[5], p) for _ in range(m)]
         Vs = [commitment(g, h, vs[i], gammas[i]) for i in range(m)]
-        Prov = AggregNIRangeProver(vs, n, g, h, gs, hs, gammas, u, SUPERCURVE, seeds[6])
+        Prov = AggregNIRangeProver(vs, n, g, h, gs, hs, gammas, u, CURVE, seeds[6])
         proof = Prov.prove()
         Verif = AggregRangeVerifier(Vs, g, h, gs, hs, u, proof)
         with self.subTest(seeds=seeds, vs=vs, ind=ind):
@@ -128,7 +127,7 @@ class AggregRangeProofTest(unittest.TestCase):
         Vs = [commitment(g, h, vs[i], gammas[i]) for i in range(m)]
         ind = randint(0, len(Vs) - 1)
         Vs[ind] = commitment(g, h, vs[ind] + 1, gammas[ind])
-        Prov = AggregNIRangeProver(vs, n, g, h, gs, hs, gammas, u, SUPERCURVE, seeds[6])
+        Prov = AggregNIRangeProver(vs, n, g, h, gs, hs, gammas, u, CURVE, seeds[6])
         proof = Prov.prove()
         Verif = AggregRangeVerifier(Vs, g, h, gs, hs, u, proof)
         with self.subTest(seeds=seeds, vs=vs, ind=ind):

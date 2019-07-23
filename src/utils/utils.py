@@ -124,7 +124,7 @@ def bytes_to_point(b: bytes) -> Point:
     yp, x_enc = b[0], b[1:]
     yp = 0 if yp == 2 else 1
     x = int.from_bytes(x_enc, "big")
-    y = mod_sqrt((x ** 3 + CURVE.a * x + CURVE.b) % p, p)
+    y = mod_sqrt((x ** 3 + CURVE.a * x + CURVE.b) % p, p)[0]
     if y % 2 == yp:
         return Point(x, y, CURVE)
     else:
