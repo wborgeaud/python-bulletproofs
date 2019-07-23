@@ -2,7 +2,7 @@
 
 from ecdsa import SECP256k1
 from ..utils.utils import mod_hash, point_to_b64, ModP
-from ..pippenger import Pippenger, EC
+from ..pippenger import PipSECP256k1
 
 SUPERCURVE = SECP256k1
 
@@ -131,8 +131,7 @@ class Verifier2:
         self.verify_transcript()
 
         proof = self.proof
-        G = EC(SUPERCURVE)
-        Pip = Pippenger(G)
+        Pip = PipSECP256k1
         ss = self.get_ss(self.proof.xs)
         LHS = Pip.multiexp(
             self.g + self.h + [self.u],

@@ -27,8 +27,8 @@ class Proof:
 class RangeVerifier:
     """Verifier class for Range Proofs"""
 
-    def __init__(self, V, g, h, gs, hs, u, proof: Proof):
-        self.V = V
+    def __init__(self, Vs, g, h, gs, hs, u, proof: Proof):
+        self.Vs = Vs
         self.g = g
         self.h = h
         self.gs = gs
@@ -67,17 +67,29 @@ class RangeVerifier:
         z = self.z
         proof = self.proof
 
-        n = len(gs)
+        nm = len(gs)
+        m = len(self.Vs)
+        n = nm // m
+
         delta_yz = (z - z ** 2) * sum(
-            [y ** i for i in range(n)], ModP(0, SUPERCURVE.order)
-        ) - (z ** 3) * ModP(2 ** n - 1, SUPERCURVE.order)
-        hsp = [(y.inv() ** i) * hs[i] for i in range(n)]
+            [y ** i for i in range(nm)], ModP(0, SUPERCURVE.order)
+        ) - sum(
+            [(z ** (j + 2)) * ModP(2 ** n - 1, SUPERCURVE.order) for j in range(1, m + 1)]
+        )
+        hsp = [(y.inv() ** i) * hs[i] for i in range(nm)]
+
+        ### DEBUG ###
+        d1 = proof.t_hat * g + proof.taux * h
+        ### DEBUG ###
         self.assertThat(
             proof.t_hat * g + proof.taux * h
-            == (z ** 2) * self.V + delta_yz * g + x * proof.T1 + (x ** 2) * proof.T2
+            == PipSECP256k1.multiexp(
+                self.Vs + [g, proof.T1, proof.T2],
+                [z ** (j + 2) for j in range(m)] + [delta_yz, x, x ** 2],
+            )
         )
 
-        P = self._getP(x, y, z, proof.A, proof.S, gs, hsp, n)
+        P = self._getP(x, y, z, proof.A, proof.S, gs, hsp, n, m)
         # self.assertThat(
         #     P == vector_commitment(gs, hsp, proof.ls, proof.rs) + proof.mu * h
         # )
@@ -87,13 +99,16 @@ class RangeVerifier:
         )
         return InnerVerif.verify()
 
-    def _getP(self, x, y, z, A, S, gs, hsp, n):
+    def _getP(self, x, y, z, A, S, gs, hsp, n, m):
         return (
             A
             + x * S
             + PipSECP256k1.multiexp(
                 gs + hsp,
-                [-z for _ in range(n)]
-                + [(z * (y ** i)) + ((z ** 2) * (2 ** i)) for i in range(n)],
+                [-z for _ in range(n * m)]
+                + [
+                    (z * (y ** i)) + (z ** (2 + (i // n))) * (2 ** (i % n))
+                    for i in range(n * m)
+                ],
             )
         )
